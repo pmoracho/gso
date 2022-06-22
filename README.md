@@ -1,9 +1,10 @@
-# cmdline
+# gso
 
-__A simple command line script template for new proyects__
+__Get SQL Server objects__
 
-Un simple template o modelo de un script de linea de comando para usar en la
-construcción de cualquier nueva herramienta de este tipo.
+Una herramienta de línea de comandos para extraer objetos de servidores de SQL
+SERVER y salvarlos a un archivo. El sentido es el de poder migrar estos a un
+flujo de trabajo basado en `git`.
 
 ### características
 
@@ -14,6 +15,16 @@ construcción de cualquier nueva herramienta de este tipo.
 * Congfiguración tipo `INI`
 * Log con `logging`
 * `docker`izable
+
+### Objetos exportables
+
+* Tablas físicas
+    - Script de creación con índices
+    - Datos
+* Stored procedures
+* Funciones
+* Triggers
+* Vistas
 
 
 # Instalación y desarrollo
@@ -38,9 +49,9 @@ herramienta.
 * Instalar `pytest`
 
 ```
-git clone https://github.com/pmoracho/cmdline.git
+git clone https://github.com/pmoracho/gso.git
 cd cmdline
-python -m venv .venv --prompt=cmdline
+python -m venv .venv --prompt=gso
 
 # En Windows
 .venv\Scripts\activate.bat
@@ -63,16 +74,16 @@ python setup.py develop
 ```
 
 Esto genera un script de ejecución consistente entre plataformas que en el caso
-de este template se llamará `cmdline`. El código del mismo:
+de este template se llamará `gso`. El código del mismo:
 
 ```python
-#!<root path>/cmdline/.venv/bin/python
-# EASY-INSTALL-ENTRY-SCRIPT: 'cmdline','console_scripts','cmdline'
+#!<root path>/gso/.venv/bin/python
+# EASY-INSTALL-ENTRY-SCRIPT: 'gso','console_scripts','gso'
 import re
 import sys
 
 # for compatibility with easy_install; see #2198
-__requires__ = 'cmdline'
+__requires__ = 'gso'
 
 try:
     from importlib.metadata import distribution
@@ -87,8 +98,8 @@ def importlib_load_entry_point(spec, group, name):
     dist_name, _, _ = spec.partition('==')
 ```
 
-Con esto logramos que sea posible ejecutar `cmdline` desde `<root
-path>/cmdline/.venv/bin/python`, dónde `<root path>` será la carpeta base en
+Con esto logramos que sea posible ejecutar `gso` desde `<root
+path>/gso/.venv/bin/python`, dónde `<root path>` será la carpeta base en
 dónde hemos instalado este proyecto, la ejecución usará el interprete `python`
 del entorno virtual, algo fundamental ya que es en este entorno dónde hemos
 instalado los requerimientos de la herramienta.
@@ -121,8 +132,8 @@ nuevo proyecto a partir de este template serían:
     * Paquetes requeridos `REQUIRED`
     * Clasificadores para **PyPy**: `setup(..., classifiers)`
     * `entry_points`, según sea la invocación del código principal del script.
-2. Configuración de versión en `cmdline/__version__.py`
-3. Editar código en `cmdline/core.py`
+2. Configuración de versión en `gso/__version__.py`
+3. Editar código en `gso/core.py`
 4. Renombrar proyecto y carpeta del módulo `cmdline` por el nombre de la nueva herramienta
 5. Eliminar repositorio `.git` y generar una nuevo con `git init`
 

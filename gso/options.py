@@ -1,13 +1,13 @@
 import gettext
 from gettext import gettext as _
 
-gettext.textdomain('cmdline')
+gettext.textdomain('gso')
 
-from cmdline.__version__  import NAME
-from cmdline.__version__  import DESCRIPTION
-from cmdline.__version__  import URL
-from cmdline.__version__  import AUTHOR
-from cmdline.__version__  import VERSION
+from gso.__version__  import NAME
+from gso.__version__  import DESCRIPTION
+from gso.__version__  import URL
+from gso.__version__  import AUTHOR
+from gso.__version__  import VERSION
 
 def _my_gettext(s):
     """Traducir algunas cadenas de argparse."""
@@ -35,8 +35,8 @@ def init_argparse():
                                         formatter_class=make_wide(argparse.HelpFormatter, w=80, h=48)
     )
 
-    opciones = {    "commando": {
-                                "help": _("Comando del migrador, export o import")
+    opciones = {    "objeto": {
+                                "help": _("Patron del objeto a exportar")
                     },
                     "--version -v": {
                                 "action":    "version",
@@ -56,6 +56,14 @@ def init_argparse():
                             "dest":	"logfile",
                             "default": "",
                             "help":	_("Archivo de log"),
+                            "metavar": "file"
+                    },
+                    "--config-file -c": {
+                            "type":	str,
+                            "action": "store",
+                            "dest":	"config_file",
+                            "default": "gso.cfg",
+                            "help":	_("Archivo de configuración"),
                             "metavar": "file"
                     },
                     "--quiet -q": {

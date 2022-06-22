@@ -9,11 +9,12 @@ class Config:
                "entero": 150,
                "booleano": False,
                "cadena": '',
-               "progress_bar_ticks": 20,
+               "progress_bar_ticks": 20
             }
 
     def __init__(self, file=None, override_section=None):
 
+        self.servers = {}
         self.config = ConfigParser()
         self.__dict__.update(self.DEF_CFG)
 
@@ -26,10 +27,11 @@ class Config:
 
             self._load('Config')
             if self.override_section:
-                  self._load(self.override_section)
+                self._load(self.override_section)
 
     def _load(self, section):
 
+        # Configuracion general
         self.config.read_file(self.file)
         items_ini = self.config.items(section)
 
@@ -44,6 +46,11 @@ class Config:
             else:
                 self.__dict__[k] = locate(type(d).__name__)(v)
 
+        # Configuracion de servers
+        items_ini = self.config.items("Servers")
+        for (k, v) in items_ini:
+            self.servers.update({k: v.replace('"', '')})
+
     def __str__(self):
 
       return f"""
@@ -54,5 +61,6 @@ lista_enteros: {self.lista_enteros}
        entero: {self.entero}
      booleano: {self.booleano}
        cadena: {self.cadena}
+      Servers: {self.servers}
 -----------------------------------------
       """

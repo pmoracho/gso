@@ -5,7 +5,7 @@ class Log:
 
     def __init__(self, outputpath, loglevel, quiet = True):
 
-        logging.basicConfig(filename=os.path.join(outputpath, 'cmdline.log'),
+        logging.basicConfig(filename=os.path.join(outputpath, 'gso.log'),
                             level=getattr(logging, loglevel.upper(), None),
                             format='%(asctime)s|%(levelname)s|%(message)s',
                             datefmt='%Y/%m/%d %I:%M:%S',

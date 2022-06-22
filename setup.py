@@ -12,19 +12,20 @@ from shutil import rmtree
 from setuptools import find_packages, setup, Command
 
 # Package meta-data.
-from cmdline.__version__  import __version__
-from cmdline.__version__  import NAME
-from cmdline.__version__  import DESCRIPTION
-from cmdline.__version__  import URL
-from cmdline.__version__  import AUTHOR
-from cmdline.__version__  import EMAIL
-from cmdline.__version__  import VERSION
+from gso.__version__  import __version__
+from gso.__version__  import NAME
+from gso.__version__  import DESCRIPTION
+from gso.__version__  import URL
+from gso.__version__  import AUTHOR
+from gso.__version__  import EMAIL
+from gso.__version__  import VERSION
 
-REQUIRES_PYTHON = '>=3.6.0'
+REQUIRES_PYTHON = '>=3.10.0'
 
 # What packages are required for this module to be executed?
 REQUIRED = [
-    "progressbar2==3.53.1"
+    "progressbar2==4.0.0",
+    "pyodbc==4.0.32"
     # 'requests', 'maya', 'records',
 ]
 
@@ -123,7 +124,7 @@ setup(
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: Implementation :: CPython',
         'Programming Language :: Python :: Implementation :: PyPy'
     ],
@@ -133,7 +134,7 @@ setup(
     },
     entry_points={
     'console_scripts': [
-        'cmdline=cmdline.core:main',
+        'gso=gso.core:main',
     ],
 },
 )

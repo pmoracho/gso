@@ -2,7 +2,7 @@ import os, tempfile, sys
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from cmdline.config import Config
+from gso.config import Config
 
 def test_config():
 
