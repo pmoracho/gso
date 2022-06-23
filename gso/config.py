@@ -9,7 +9,8 @@ class Config:
                "entero": 150,
                "booleano": False,
                "cadena": '',
-               "progress_bar_ticks": 20
+               "progress_bar_ticks": 20,
+               "export_path": "."
             }
 
     def __init__(self, file=None, override_section=None):
