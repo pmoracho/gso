@@ -4,12 +4,6 @@ try:
     from gettext import gettext as _
     gettext.textdomain('gso')
 
-    from progressbar import ProgressBar
-    from progressbar import FormatLabel
-    from progressbar import Percentage
-    from progressbar import Bar
-    from progressbar import RotatingMarker
-    from progressbar import ETA
     import time
     import os
     from gso.__version__  import NAME
@@ -66,19 +60,8 @@ def main():
         config = Config(cfgfile)
         log.info("Loading config: {}".format(cfgfile))
 
-        # f = 1
-        # t = config.progress_bar_ticks
-        # widgets = [FormatLabel(''), ' ', Percentage(), ' ', Bar('#'), ' ', ETA(), ' ', RotatingMarker()]
-        # bar = ProgressBar(widgets=widgets, maxval=t)
-
-        # for i in range(1, t+1):
-        #     widgets[0] = FormatLabel('[Contador: {0}]'.format(i))
-        #     time.sleep(.5)
-        #     bar.update(i)
-
-        # bar.finish()
-
-        export(config, args.objeto)
+        if args.verbo == "export":
+            export(config, args.objeto)
 
     except FileNotFoundError:
         errormsg = "No existe el archivo de configuración ({0})".format(cfgfile)

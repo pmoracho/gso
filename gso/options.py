@@ -35,7 +35,10 @@ def init_argparse():
                                         formatter_class=make_wide(argparse.HelpFormatter, w=80, h=48)
     )
 
-    opciones = {    "objeto": {
+    opciones = {    "verbo": {
+                                "help": _("Accion a ejecutar")
+                    },
+                    "objeto": {
                                 "help": _("Patron del objeto a exportar")
                     },
                     "--version -v": {

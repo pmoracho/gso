@@ -18,6 +18,20 @@ select name
     order by name
 """
 
+SQL_Tables = """
+set nocount on;
+use [{base}];
+
+set nocount off;
+SELECT	[objz].[name],
+        [objz].[object_id],
+        SCHEMA_NAME([objz].[schema_id])
+        FROM .[sys].[objects] AS [objz]
+        WHERE 	[objz].[type]  IN ('S','U')
+                AND [objz].[name]  <>  'dtproperties'
+        order by [objz].[name]
+"""
+
 SQL_moudlos = """
 set nocount on;
 use [{base}];
@@ -28,7 +42,7 @@ select
 	[db] = db_name(),
 	[schema] = OBJECT_SCHEMA_NAME(m.object_id),
 	[name] = OBJECT_NAME(m.object_id),
-    o.type,
+    CASE WHEN o.type = 'P ' AND CHARINDEX('_1_0_0',  OBJECT_NAME(m.object_id)) > 0 THEN 'PV' ELSE o.type END,
     o.type_desc,
     m.uses_ansi_nulls,
     m.uses_quoted_identifier,
@@ -46,17 +60,18 @@ select
 
 obj_type = {
     'P ': 'sp',
+    'PV': 'spv',
     'V ': 'view',
     'FN': 'fn',
     'IF': 'fn',
     'TR': 'trg',
     'R ': 'rule',
     'TF': 'fn',
-    'D ': 'dft'
+    'D ': 'dft',
+    'TB': 'tbl'
 }
 
 type_obj = {v: k for k, v in obj_type.items()}
-
 
 
 def export(cfg, object_pattern):
@@ -69,40 +84,65 @@ def export(cfg, object_pattern):
 
     bar = ProgressBar(widgets=widgets, maxval=t)
 
-    for s, b, o, obj, t, _, _, _, _, _, text in objetos:
+    for s, base, owner, obj, tipo, _, _, _, _, _, text in objetos:
         widgets[0] = FormatLabel('[{0}]'.format(obj.ljust(50)[:50]))
-        path = os.path.join(cfg.export_path, b, obj_type[t]).lower()
-        file = os.path.join(path, o + '.' + obj + '.sql')
+        path = os.path.join(cfg.export_path, base, obj_type[tipo]).lower()
+        file = os.path.join(path, owner + '.' + obj + '.sql')
         if text:
-            exports[t](path, file, text)
+            p = Path(path)
+            p.mkdir(parents=True, exist_ok=True)
+
+            exports[tipo](base, owner, obj, path, file, text)
         i = i + 1
         bar.update(i)
     bar.finish()
 
-def export_content(path, file, text):
-    # print("Exportando conenido: {0}".format(file))
-    p = Path(path)
-    p.mkdir(parents=True, exist_ok=True)
+def export_content(base, owner, obj, path, file, text):
     text = [l for l in text.split('\r')]
+    save_object(file, text)
+
+def export_sp(base, owner, obj, path, file, text):
+
+    searchtxt = "CREATE PROCEDURE " + obj
+    replacetxt = "CREATE PROCEDURE [" + owner + "].[" + obj + "]"
+
+    text = get_set_header(base) + text.replace(searchtxt, replacetxt)
+    text = [l for l in text.split('\r')]
+    save_object(file, text)
+
+def export_function(base, owner, obj, path, file, text):
+
+    text = get_set_header(base) + text
+    text = [l for l in text.split('\r')]
+    save_object(file, text)
+
+def export_table(base, owner, obj, path, file, text):
+    pass
+
+def save_object(file, text):
     with open(file, 'w', encoding='utf-8') as f:
         f.writelines(text)
 
-def export_sp(path, file, text):
-    # print("Exportando SP: {0}".format(file))
-    p = Path(path)
-    p.mkdir(parents=True, exist_ok=True)
-    text = [l for l in text.split('\r')]
-    with open(file, 'w', encoding='utf-8') as f:
-        f.writelines(text)
+def get_set_header(base):
+    return """USE [{base}]
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+""".replace('{base}', base)
 
 exports = {
     'P ': export_sp,
+    'PV': export_sp,
     'V ': export_content,
-    'FN': export_content,
-    'IF': export_content,
+    'FN': export_function,
+    'IF': export_function,
     'TR': export_content,
     'R ': export_content,
-    'TF': export_content,
+    'TF': export_function,
+    'TB': export_table,
     'D ': export_content
 }
 
@@ -112,7 +152,7 @@ def get_objects(cfg, object_pattern):
     columns = []
     objetos = []
 
-    tipo, server, base, owner, obj = get_parts_from_object_patter(object_pattern)
+    tipo, server, base, owner, objname = get_parts_from_object_patter(object_pattern)
 
     if server == '*':
         servers = list(cfg.servers)
@@ -122,15 +162,19 @@ def get_objects(cfg, object_pattern):
     where_dbases = "" if base == '*' else "   AND  name LIKE '%" + base + "%'"
 
     where = ""
-    if obj != '*':
-        where = where + "   AND  OBJECT_NAME(m.object_id) LIKE '%" + obj + "%'"
+    if objname != '*':
+        where = where + "   AND  OBJECT_NAME(m.object_id) LIKE '%" + objname + "%'"
 
     if owner != '*':
         where = where + "   AND  OBJECT_SCHEMA_NAME(m.object_id) LIKE '%" + owner + "%'"
 
     if tipo != '*':
-        # IF, FN, p, TF, V
-        where = where + "   AND  o.type LIKE '%" + type_obj[tipo] + "%'"
+        if tipo != 'TB':
+            # IF, FN, p, TF, V
+            where = where + "   AND  o.type LIKE '%" + type_obj[tipo] + "%'"
+        else:
+            # Invalidamos la consulta, las tablas van por otro camino
+            where = where + "   AND 1 = 2"
 
     for server in servers:
 
@@ -142,15 +186,24 @@ def get_objects(cfg, object_pattern):
         cursor.execute(SQL)
 
         for base in [row[0] for row in cursor.fetchall()]:
-            SQL = SQL_moudlos.replace('{base}', base).replace('{server}', server).replace('{where}', where)
-            cursorb = cnxn.cursor()
-            cursorb.execute(SQL)
-            cursorb.nextset()
-            results = [row for row in cursorb.fetchall()]
-            objetos.extend(results)
+            # Objetos en Modulos
+            objetos.extend(get_modulos(cnxn, server, base, where))
+
+            # Tablas
+            objetos.extend(get_tables(cnxn, server, base, objname))
+
 
     return objetos
 
-
 def get_parts_from_object_patter(object_pattern):
     return tuple(object_pattern.split('.'))
+
+def get_modulos(cnxn, server, base, where):
+    SQL = SQL_moudlos.replace('{base}', base).replace('{server}', server).replace('{where}', where)
+    cursorb = cnxn.cursor()
+    cursorb.execute(SQL)
+    cursorb.nextset()
+    return [row for row in cursorb.fetchall()]
+
+def get_tables(cnxn, server, base, objname):
+    return []
