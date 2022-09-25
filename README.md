@@ -50,7 +50,7 @@ herramienta.
 
 ```
 git clone https://github.com/pmoracho/gso.git
-cd cmdline
+cd gso
 python -m venv .venv --prompt=gso
 
 # En Windows

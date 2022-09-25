@@ -16,6 +16,7 @@ try:
     from gso.log import Log
     from gso.config import Config
     from gso.exporter import export
+    from gso.remover import remove
 
 except ImportError as err:
     modulename = err.args[0].partition("'")[-1].rpartition("'")[0]
@@ -62,6 +63,9 @@ def main():
 
         if args.verbo == "export":
             export(config, args.objeto)
+
+        if args.verbo == "remove":
+            remove(config)
 
     except FileNotFoundError:
         errormsg = "No existe el archivo de configuración ({0})".format(cfgfile)
