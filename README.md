@@ -122,21 +122,22 @@ pytest
 
 
 
-## Comenzando un nuevo proyecto
+## Ejecutar `gso`
 
-Una vez completada la instalación inicial, los primeros cambios para crear un
-nuevo proyecto a partir de este template serían:
+Configurar un archivo `.cfg` por ejemplo:
 
-1. Modificar `setup.py`:
-    * Datos de la herramienta: `NAME`, `DESCRIPTION`, `URL`, `EMAIL`, `AUTHOR`
-    * Paquetes requeridos `REQUIRED`
-    * Clasificadores para **PyPy**: `setup(..., classifiers)`
-    * `entry_points`, según sea la invocación del código principal del script.
-2. Configuración de versión en `gso/__version__.py`
-3. Editar código en `gso/core.py`
-4. Renombrar proyecto y carpeta del módulo `cmdline` por el nombre de la nueva herramienta
-5. Eliminar repositorio `.git` y generar una nuevo con `git init`
+    [Config]
+    progress_bar_ticks=20
+    export_path = <path_al_repositorio>
+    deploy_path= D:\tmp
 
+    [Servers]
+    server1 = "DRIVER={ODBC Driver 17 for SQL Server};SERVER=server1;DATABASE=master;UID=user;PWD=passwd;"
+    server2 = "DRIVER={ODBC Driver 17 for SQL Server};SERVER=server2;DATABASE=master;UID=user;PWD=passwd;"
+
+Ejecutar sobre todos lo servidores, bases, tipo de objetos y objetos:
+
+    gso export *.*.*.*.* --config archivo.cfg
 
 [git]: https://git-scm.com/
 [python]: https://www.python.org/
