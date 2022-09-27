@@ -32,7 +32,7 @@ SELECT	[objz].[name],
         order by [objz].[name]
 """
 
-SQL_moudlos = """
+SQL_modulos = """
 set nocount on;
 use [{base}];
 
@@ -152,7 +152,7 @@ def get_objects(cfg, object_pattern):
     columns = []
     objetos = []
 
-    tipo, server, base, owner, objname = get_parts_from_object_patter(object_pattern)
+    tipo, server, base, owner, objname = get_parts_from_object_pattern(object_pattern)
 
     if server == '*':
         servers = list(cfg.servers)
@@ -192,18 +192,18 @@ def get_objects(cfg, object_pattern):
             # Tablas
             objetos.extend(get_tables(cnxn, server, base, objname))
 
-
     return objetos
 
-def get_parts_from_object_patter(object_pattern):
+def get_parts_from_object_pattern(object_pattern):
     return tuple(object_pattern.split('.'))
 
 def get_modulos(cnxn, server, base, where):
-    SQL = SQL_moudlos.replace('{base}', base).replace('{server}', server).replace('{where}', where)
+    SQL = SQL_modulos.replace('{base}', base).replace('{server}', server).replace('{where}', where)
     cursorb = cnxn.cursor()
     cursorb.execute(SQL)
     cursorb.nextset()
     return [row for row in cursorb.fetchall()]
 
 def get_tables(cnxn, server, base, objname):
+    # To do
     return []
