@@ -16,6 +16,7 @@ class Config:
     def __init__(self, file=None, override_section=None):
 
         self.servers = {}
+        self.Databases = {}
         self.config = ConfigParser()
         self.__dict__.update(self.DEF_CFG)
 
@@ -51,6 +52,11 @@ class Config:
         items_ini = self.config.items("Servers")
         for (k, v) in items_ini:
             self.servers.update({k: v.replace('"', '')})
+
+        # Configuracion databases por servidor
+        items_ini = self.config.items("Databases")
+        for (k, v) in items_ini:
+            self.Databases.update({k: v.replace('"', '')})
 
     def __str__(self):
 

@@ -1,5 +1,6 @@
 try:
     import sys
+    import time
     import gettext
     from gettext import gettext as _
     gettext.textdomain('gso')
@@ -61,11 +62,15 @@ def main():
         config = Config(cfgfile)
         log.info("Loading config: {}".format(cfgfile))
 
+        start = time.time()
         if args.verbo == "export":
             export(config, args.objeto)
 
         if args.verbo == "remove":
             remove(config)
+
+        end = time.time()
+        print("Tiempo de proceso: {0} minutos".format( (end - start)/60 ))
 
     except FileNotFoundError:
         errormsg = "No existe el archivo de configuración ({0})".format(cfgfile)

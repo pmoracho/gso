@@ -23,12 +23,22 @@ set nocount on;
 use [{base}];
 
 set nocount off;
-SELECT	[objz].[name],
-        [objz].[object_id],
-        SCHEMA_NAME([objz].[schema_id])
+SELECT	'{server}',
+        [db] = db_name(),
+        [schema] = OBJECT_SCHEMA_NAME([objz].[object_id]),
+        [name] = REPLACE([objz].[name], '''', ''),
+        'TB',
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL
         FROM .[sys].[objects] AS [objz]
-        WHERE 	[objz].[type]  IN ('S','U')
+        WHERE 	[objz].[type]  IN ('U')
                 AND [objz].[name]  <>  'dtproperties'
+                AND db_name() NOT IN ('tempdb', 'master', 'model', 'msdb')
+                AND {where}
         order by [objz].[name]
 """
 
@@ -76,22 +86,24 @@ type_obj = {v: k for k, v in obj_type.items()}
 
 def export(cfg, object_pattern):
 
+    print("Creating list of objects (Tables & Code)")
     objetos = get_objects(cfg, object_pattern)
+
+    print("Exporting objects")
     i = 0
     t = len(objetos)
 
     widgets = [FormatLabel(''), ' ', Percentage(), ' ', Bar('#'), ' ', ETA(), ' ', RotatingMarker()]
-
     bar = ProgressBar(widgets=widgets, maxval=t)
 
     for s, base, owner, obj, tipo, _, _, _, _, _, text in objetos:
-        widgets[0] = FormatLabel('[{0}]'.format(obj.ljust(50)[:50]))
+        objcompleto = base + "." + owner + "." + obj
+        widgets[0] = FormatLabel('[{0}]'.format(objcompleto.ljust(80)[:80]))
         path = os.path.join(cfg.export_path, base, obj_type[tipo]).lower()
         file = os.path.join(path, owner + '.' + obj + '.sql')
         if text:
             p = Path(path)
             p.mkdir(parents=True, exist_ok=True)
-
             exports[tipo](base, owner, obj, path, file, text)
         i = i + 1
         bar.update(i)
@@ -117,7 +129,9 @@ def export_function(base, owner, obj, path, file, text):
     save_object(file, text)
 
 def export_table(base, owner, obj, path, file, text):
-    pass
+
+    text = [l for l in text.split('\r')]
+    save_object(file, text)
 
 def save_object(file, text):
     with open(file, 'w', encoding='utf-8') as f:
@@ -152,45 +166,56 @@ def get_objects(cfg, object_pattern):
     columns = []
     objetos = []
 
-    tipo, server, base, owner, objname = get_parts_from_object_pattern(object_pattern)
+    tipo, server_solicitado, base_solicitada, owner, objname = get_parts_from_object_pattern(object_pattern)
 
-    if server == '*':
+    if server_solicitado == '*':
         servers = list(cfg.servers)
     else:
-        servers.append(server)
+        servers.append(server_solicitado)
 
-    where_dbases = "" if base == '*' else "   AND  name LIKE '%" + base + "%'"
 
     where = ""
+    where_tables = "   1 = 1"
     if objname != '*':
         where = where + "   AND  OBJECT_NAME(m.object_id) LIKE '%" + objname + "%'"
+        where_tables = where_tables + "   AND [objz].[name] LIKE '%" + objname + "%'"
 
     if owner != '*':
         where = where + "   AND  OBJECT_SCHEMA_NAME(m.object_id) LIKE '%" + owner + "%'"
+        where_tables = where_tables + "   AND OBJECT_SCHEMA_NAME([objz].[object_id]) LIKE '%" + owner + "%'"
 
     if tipo != '*':
         if tipo != 'TB':
             # IF, FN, p, TF, V
             where = where + "   AND  o.type LIKE '%" + type_obj[tipo] + "%'"
+            where_tables = where_tables + "   AND 1 = 2"
         else:
             # Invalidamos la consulta, las tablas van por otro camino
             where = where + "   AND 1 = 2"
 
+
+
     for server in servers:
+
+        Databases = None if server not in cfg.Databases else cfg.Databases[server]
+        where_dbases = "" if base_solicitada == '*' else "   AND  name LIKE '%" + base_solicitada + "%'"
+        where_dbases = where_dbases + "AND name IN ('" + "', '".join([e.strip() for e in Databases.split(',')]) + "')\n" if Databases else ""
 
         connectstr = cfg.servers[server]
         cnxn = pyodbc.connect(connectstr)
         cursor = cnxn.cursor()
 
         SQL = SQL_dbases.replace('{where_dbases}', where_dbases)
+        #print(SQL)
         cursor.execute(SQL)
+
 
         for base in [row[0] for row in cursor.fetchall()]:
             # Objetos en Modulos
             objetos.extend(get_modulos(cnxn, server, base, where))
 
             # Tablas
-            objetos.extend(get_tables(cnxn, server, base, objname))
+            objetos.extend(get_tables(cnxn, server, base, where_tables))
 
     return objetos
 
@@ -204,6 +229,51 @@ def get_modulos(cnxn, server, base, where):
     cursorb.nextset()
     return [row for row in cursorb.fetchall()]
 
-def get_tables(cnxn, server, base, objname):
-    # To do
-    return []
+def get_tables(cnxn, server, base, where):
+
+
+
+    SQL = SQL_Tables.replace('{base}', base).replace('{server}', server).replace('{where}', where)
+    cursorb = cnxn.cursor()
+    #print(SQL)
+    cursorb.execute(SQL)
+    cursorb.nextset()
+    tablas = cursorb.fetchall()
+    cursorb.close()
+
+    SQL_ddl = """
+SET NOCOUNT ON
+DECLARE @Script		   VARCHAR(MAX)
+DECLARE @ErrorMessage  VARCHAR(2000)
+
+EXEC [g-track].dbo.SCRIPT_Mecanus_TablaFisica
+		@Database	 = '{base}',
+		@Owner		 = '{owner}',
+		@ObjectId	 = '{objname}',
+		@Script		 = @Script OUTPUT,
+		@ErrorMessage= @ErrorMessage OUTPUT;
+
+SET NOCOUNT OFF
+SELECT @Script
+"""
+    i = 0
+    t = len(tablas)
+
+    widgets = [FormatLabel(''), ' ', Percentage(), ' ', Bar('#'), ' ', ETA(), ' ', RotatingMarker()]
+
+    bar = ProgressBar(widgets=widgets, maxval=t)
+    resultados = []
+    cursorc = cnxn.cursor()
+    for row in tablas:
+        s, base, owner, obj, tipo, _, _, _, _, _, text = row
+        objcompleto = base + "." + owner + "." + obj
+        widgets[0] = FormatLabel('[{0}]'.format(objcompleto.ljust(80)[:80]))
+        SQL = SQL_ddl.replace('{base}', base).replace('{objname}', obj).replace('{owner}', owner)
+        cursorc.execute(SQL)
+        text = cursorc.fetchone()
+        new_row = (row[0], row[1], row[2], row[3], row[4], None, None, None, None, None,  text[0])
+        resultados.append(new_row)
+        i = i + 1
+        bar.update(i)
+    bar.finish()
+    return resultados
