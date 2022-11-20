@@ -75,7 +75,14 @@ def init_argparse():
                                 "default":    False,
                                 "help":        _("Modo silencioso sin mostrar absolutamente nada.")
                     },
-
+                    "--last-n-days -d": {
+                            "type":	int,
+                            "action": "store",
+                            "dest":	"ndays",
+                            "default": None,
+                            "help":	_("Configura la cantidad de días de los objetos modificados a recuperar"),
+                            "metavar": "dias"
+                    },
             }
 
     for key, val in opciones.items():
@@ -85,8 +92,6 @@ def init_argparse():
         cmdparser.add_argument(*args, **kwargs)
 
     return cmdparser
-
-
 
 def make_wide(formatter, w=120, h=40):
     """Return a wider HelpFormatter, if possible."""

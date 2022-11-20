@@ -59,21 +59,23 @@ def main():
     log.info("Starting {0} - {1} (v{2})".format(NAME, DESCRIPTION, VERSION))
     try:
         cfgfile = os.path.join(os.getcwd(), args.config_file)
-        config = Config(cfgfile)
-        log.info("Loading config: {}".format(cfgfile))
-
-        start = time.time()
-        if args.verbo == "export":
-            export(config, args.objeto)
-
-        if args.verbo == "remove":
-            remove(config)
-
-        end = time.time()
-        print("Tiempo de proceso: {0} minutos".format( (end - start)/60 ))
-
     except FileNotFoundError:
         errormsg = "No existe el archivo de configuración ({0})".format(cfgfile)
         print(errormsg)
         log.error(errormsg)
         sys.exit(-1)
+
+    config = Config(cfgfile)
+    log.info("Loading config: {}".format(cfgfile))
+
+    start = time.time()
+    if args.verbo == "export":
+        export(config, args.objeto, args.ndays)
+
+    if args.verbo == "remove":
+        remove(config, "*.*.*.*.*")
+
+    end = time.time()
+    print("Tiempo de proceso: {0} minutos".format( (end - start)/60 ))
+
+

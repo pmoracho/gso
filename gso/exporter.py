@@ -2,7 +2,8 @@ import pyodbc
 import os
 from pathlib import Path
 from gso.tabulate import tabulate
-
+from gso.export_helpers import *
+from gso.helper import slugify
 from progressbar import ProgressBar
 from progressbar import FormatLabel
 from progressbar import Percentage
@@ -32,7 +33,7 @@ SELECT	'{server}',
         NULL,
         NULL,
         NULL,
-        NULL,
+        CASE WHEN [objz].modify_date > [objz].create_date THEN [objz].modify_date ELSE [objz].create_date END,
         NULL
         FROM .[sys].[objects] AS [objz]
         WHERE 	[objz].[type]  IN ('U')
@@ -57,7 +58,7 @@ select
     m.uses_ansi_nulls,
     m.uses_quoted_identifier,
     o.create_date,
-    o.modify_date,
+    CASE WHEN o.modify_date > o.create_date THEN o.modify_date ELSE o.create_date END,
     m.definition
     from	sys.sql_modules m
     inner join sys.objects o
@@ -68,28 +69,34 @@ select
 	    o.type;
 """
 
-obj_type = {
-    'P ': 'sp',
-    'PV': 'spv',
-    'V ': 'view',
-    'FN': 'fn',
-    'IF': 'fn',
-    'TR': 'trg',
-    'R ': 'rule',
-    'TF': 'fn',
-    'D ': 'dft',
-    'TB': 'tbl'
+objetos_def = {
+    "P": {"folder": "sp", "export": export_sp, "name_format": "{owner}.{objname}"},
+    "PV": {"folder": "spv", "export": export_sp, "name_format": "{owner}.{objname}"},
+    "V": {"folder": "view", "export": export_content, "name_format": "{owner}.{objname}"},
+    "FN": {"folder": "fn", "export": export_function, "name_format": "{owner}.{objname}"},
+    "IF": {"folder": "fn", "export": export_function, "name_format": "{owner}.{objname}"},
+    "TR": {"folder": "trg", "export": export_content, "name_format": "{owner}.{objname}"},
+    "R": {"folder": "rule", "export": export_content, "name_format": "{owner}.{objname}"},
+    "TF": {"folder": "trg", "export": export_function, "name_format": "{owner}.{objname}"},
+    "D": {"folder": "trg", "export": export_content, "name_format": "{owner}.{objname}"},
+    "TB": {"folder": "trg", "export": export_table, "name_format": "{owner}.{objname}"},
+    "TablaTemporal": {"folder": "mobj\\tblt", "export": export_content, "name_format": "{objname}"},
+    "Reporte": {"folder": "mobj\\rpt", "export": export_content, "name_format": "{objname}"},
+    "Parametro": {"folder": "mobj\\pmt", "export": export_content, "name_format": "{objname}"},
+    "ProcesosAgenda": {"folder": "mobj\\pa", "export": export_content, "name_format": "{objname}"},
+    "Modulo": {"folder": "mobj\\mo", "export": export_content, "name_format": "{objname}"},
+    "Operacion": {"folder": "mobj\\op", "export": export_content, "name_format": "{objname}"},
 }
 
-type_obj = {v: k for k, v in obj_type.items()}
+type_obj = {v["folder"]: k for k, v in objetos_def.items()}
 
 
-def export(cfg, object_pattern):
+def export(cfg, object_pattern, ndays=None):
 
-    print("Creating list of objects (Tables & Code)")
-    objetos = get_objects(cfg, object_pattern)
+    print("Creating list of objects (Tables/Code/Mecanus Objects)")
+    objetos = get_objects(cfg, object_pattern, ndays)
 
-    print("Exporting objects")
+    print("Exporting objects to files")
     i = 0
     t = len(objetos)
 
@@ -99,43 +106,19 @@ def export(cfg, object_pattern):
     for s, base, owner, obj, tipo, _, _, _, _, _, text in objetos:
         objcompleto = base + "." + owner + "." + obj
         widgets[0] = FormatLabel('[{0}]'.format(objcompleto.ljust(80)[:80]))
-        path = os.path.join(cfg.export_path, base, obj_type[tipo]).lower()
-        file = os.path.join(path, owner + '.' + obj + '.sql')
+        path = os.path.join(cfg.export_path, base, objetos_def[tipo]["folder"]).lower()
+
+        file = objetos_def[tipo]["name_format"].replace("{owner}", owner).replace("{objname}", obj)
+        file = os.path.join(path, slugify(file) + '.sql')
+
         if text:
             p = Path(path)
             p.mkdir(parents=True, exist_ok=True)
-            exports[tipo](base, owner, obj, path, file, text)
+            objetos_def[tipo]["export"](base, owner, obj, path, file, text)
         i = i + 1
         bar.update(i)
     bar.finish()
 
-def export_content(base, owner, obj, path, file, text):
-    text = [l for l in text.split('\r')]
-    save_object(file, text)
-
-def export_sp(base, owner, obj, path, file, text):
-
-    searchtxt = "CREATE PROCEDURE " + obj
-    replacetxt = "CREATE PROCEDURE [" + owner + "].[" + obj + "]"
-
-    text = get_set_header(base) + text.replace(searchtxt, replacetxt)
-    text = [l for l in text.split('\r')]
-    save_object(file, text)
-
-def export_function(base, owner, obj, path, file, text):
-
-    text = get_set_header(base) + text
-    text = [l for l in text.split('\r')]
-    save_object(file, text)
-
-def export_table(base, owner, obj, path, file, text):
-
-    text = [l for l in text.split('\r')]
-    save_object(file, text)
-
-def save_object(file, text):
-    with open(file, 'w', encoding='utf-8') as f:
-        f.writelines(text)
 
 def get_set_header(base):
     return """USE [{base}]
@@ -147,20 +130,8 @@ GO
 
 """.replace('{base}', base)
 
-exports = {
-    'P ': export_sp,
-    'PV': export_sp,
-    'V ': export_content,
-    'FN': export_function,
-    'IF': export_function,
-    'TR': export_content,
-    'R ': export_content,
-    'TF': export_function,
-    'TB': export_table,
-    'D ': export_content
-}
 
-def get_objects(cfg, object_pattern):
+def get_objects(cfg, object_pattern, ndays=None):
 
     servers = []
     columns = []
@@ -173,7 +144,6 @@ def get_objects(cfg, object_pattern):
     else:
         servers.append(server_solicitado)
 
-
     where = ""
     where_tables = "   1 = 1"
     if objname != '*':
@@ -184,6 +154,10 @@ def get_objects(cfg, object_pattern):
         where = where + "   AND  OBJECT_SCHEMA_NAME(m.object_id) LIKE '%" + owner + "%'"
         where_tables = where_tables + "   AND OBJECT_SCHEMA_NAME([objz].[object_id]) LIKE '%" + owner + "%'"
 
+    if ndays:
+        where = where + "   AND  datediff(day, CASE WHEN o.modify_date > o.create_date THEN o.modify_date ELSE o.create_date END, GETDATE()) <= {0}".format(ndays)
+        where_tables = where_tables + "   AND  datediff(day, CASE WHEN [objz].modify_date > [objz].create_date THEN [objz].modify_date ELSE [objz].create_date END, GETDATE()) <= {0}".format(ndays)
+
     if tipo != '*':
         if tipo != 'TB':
             # IF, FN, p, TF, V
@@ -192,8 +166,6 @@ def get_objects(cfg, object_pattern):
         else:
             # Invalidamos la consulta, las tablas van por otro camino
             where = where + "   AND 1 = 2"
-
-
 
     for server in servers:
 
@@ -206,16 +178,21 @@ def get_objects(cfg, object_pattern):
         cursor = cnxn.cursor()
 
         SQL = SQL_dbases.replace('{where_dbases}', where_dbases)
-        #print(SQL)
+
         cursor.execute(SQL)
+        bases = [row[0] for row in cursor.fetchall()]
+        cursor.close()
 
-
-        for base in [row[0] for row in cursor.fetchall()]:
+        for base in bases:
             # Objetos en Modulos
-            objetos.extend(get_modulos(cnxn, server, base, where))
+            # objetos.extend(get_modulos(cnxn, server, base, where))
 
             # Tablas
-            objetos.extend(get_tables(cnxn, server, base, where_tables))
+            # objetos.extend(get_tables(cnxn, server, base, where_tables))
+
+            # Objetos Mecanus
+            objetos.extend(get_objetos_mecanus(cnxn, server, base, where_tables))
+
 
     return objetos
 
@@ -229,9 +206,66 @@ def get_modulos(cnxn, server, base, where):
     cursorb.nextset()
     return [row for row in cursorb.fetchall()]
 
+def get_objetos_mecanus(cnxn, server, base, where):
+
+    SQL_MO = """
+DECLARE @ErrorMessage	VARCHAR(2000)
+EXEC [g-track].dbo.List_Mecanus_Objects
+        @Database	    = '{base}',
+        @TipoObjeto	    = NULL,
+        @ErrorMessage	= @ErrorMessage OUTPUT
+"""
+
+    SQL = SQL_MO.replace('{base}', base).replace('{server}', server)
+    cursorc = cnxn.cursor()
+    #print(SQL)
+    cursorc.execute(SQL)
+    objetos_mecanus = cursorc.fetchall()
+    cursorc.close()
+
+    SQL_ddl = """
+SET NOCOUNT ON
+DECLARE @Script		   NVARCHAR(MAX)
+DECLARE @ErrorMessage  VARCHAR(2000)
+
+EXEC [g-track].dbo.Export_Mecanus_Object
+		@Database	    = '{base}',
+        @TipoObjeto     = '{tipo_objeto}',
+		@ObjectId	    = '{objname}',
+        @FlagGIT	    = 1,
+        @FlagOnlyScript	= 1,
+        @FilePath       = NULL,
+		@Script		    = @Script OUTPUT,
+		@ErrorMessage= @ErrorMessage OUTPUT;
+
+SET NOCOUNT OFF
+SELECT @Script
+"""
+    i = 0
+    resultados = []
+    t = len(objetos_mecanus)
+    if t == 0:
+        return resultados
+
+    widgets = [FormatLabel(''), ' ', Percentage(), ' ', Bar('#'), ' ', ETA(), ' ', RotatingMarker()]
+
+    bar = ProgressBar(widgets=widgets, maxval=t)
+    cursorc = cnxn.cursor()
+    for row in objetos_mecanus:
+        owner, tipo_objeto, objname = row
+        objcompleto = base + "." + objname
+        widgets[0] = FormatLabel('[{0}]'.format(objcompleto.ljust(80)[:80]))
+        SQL = SQL_ddl.replace('{base}', base).replace('{objname}', objname).replace('{tipo_objeto}', tipo_objeto)
+        cursorc.execute(SQL)
+        text = cursorc.fetchone()
+        new_row = (server, base, owner, objname, tipo_objeto, None, None, None, None, None,  text[0])
+        resultados.append(new_row)
+        i = i + 1
+        bar.update(i)
+    bar.finish()
+    return resultados
+
 def get_tables(cnxn, server, base, where):
-
-
 
     SQL = SQL_Tables.replace('{base}', base).replace('{server}', server).replace('{where}', where)
     cursorb = cnxn.cursor()
@@ -257,12 +291,14 @@ SET NOCOUNT OFF
 SELECT @Script
 """
     i = 0
+    resultados = []
     t = len(tablas)
+    if t == 0:
+        return resultados
 
     widgets = [FormatLabel(''), ' ', Percentage(), ' ', Bar('#'), ' ', ETA(), ' ', RotatingMarker()]
 
     bar = ProgressBar(widgets=widgets, maxval=t)
-    resultados = []
     cursorc = cnxn.cursor()
     for row in tablas:
         s, base, owner, obj, tipo, _, _, _, _, _, text = row
