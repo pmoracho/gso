@@ -1,3 +1,13 @@
+def get_set_header(base):
+    return """USE [{base}]
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+""".replace('{base}', base)
+
 def export_content(base, owner, obj, path, file, text):
     text = [l for l in text.split('\r')]
     save_object(file, text)

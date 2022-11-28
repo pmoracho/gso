@@ -70,22 +70,23 @@ select
 """
 
 objetos_def = {
-    "P": {"folder": "sp", "export": export_sp, "name_format": "{owner}.{objname}"},
+    "P ": {"folder": "sp", "export": export_sp, "name_format": "{owner}.{objname}"},
     "PV": {"folder": "spv", "export": export_sp, "name_format": "{owner}.{objname}"},
-    "V": {"folder": "view", "export": export_content, "name_format": "{owner}.{objname}"},
+    "V ": {"folder": "view", "export": export_content, "name_format": "{owner}.{objname}"},
     "FN": {"folder": "fn", "export": export_function, "name_format": "{owner}.{objname}"},
     "IF": {"folder": "fn", "export": export_function, "name_format": "{owner}.{objname}"},
     "TR": {"folder": "trg", "export": export_content, "name_format": "{owner}.{objname}"},
-    "R": {"folder": "rule", "export": export_content, "name_format": "{owner}.{objname}"},
-    "TF": {"folder": "trg", "export": export_function, "name_format": "{owner}.{objname}"},
-    "D": {"folder": "trg", "export": export_content, "name_format": "{owner}.{objname}"},
-    "TB": {"folder": "trg", "export": export_table, "name_format": "{owner}.{objname}"},
+    "R ": {"folder": "rule", "export": export_content, "name_format": "{owner}.{objname}"},
+    "TF": {"folder": "fn", "export": export_function, "name_format": "{owner}.{objname}"},
+    "D ": {"folder": "dft", "export": export_content, "name_format": "{owner}.{objname}"},
+    "TB": {"folder": "tbl", "export": export_table, "name_format": "{owner}.{objname}"},
     "TablaTemporal": {"folder": "mobj\\tblt", "export": export_content, "name_format": "{objname}"},
     "Reporte": {"folder": "mobj\\rpt", "export": export_content, "name_format": "{objname}"},
     "Parametro": {"folder": "mobj\\pmt", "export": export_content, "name_format": "{objname}"},
     "ProcesosAgenda": {"folder": "mobj\\pa", "export": export_content, "name_format": "{objname}"},
     "Modulo": {"folder": "mobj\\mo", "export": export_content, "name_format": "{objname}"},
     "Operacion": {"folder": "mobj\\op", "export": export_content, "name_format": "{objname}"},
+    "Menu": {"folder": "mobj\\menu", "export": export_content, "name_format": "{objname}"},
 }
 
 type_obj = {v["folder"]: k for k, v in objetos_def.items()}
@@ -119,16 +120,6 @@ def export(cfg, object_pattern, ndays=None):
         bar.update(i)
     bar.finish()
 
-
-def get_set_header(base):
-    return """USE [{base}]
-GO
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-
-""".replace('{base}', base)
 
 
 def get_objects(cfg, object_pattern, ndays=None):
@@ -185,10 +176,10 @@ def get_objects(cfg, object_pattern, ndays=None):
 
         for base in bases:
             # Objetos en Modulos
-            # objetos.extend(get_modulos(cnxn, server, base, where))
+            objetos.extend(get_sql_code_objects(cnxn, server, base, where))
 
             # Tablas
-            # objetos.extend(get_tables(cnxn, server, base, where_tables))
+            objetos.extend(get_tables(cnxn, server, base, where_tables))
 
             # Objetos Mecanus
             objetos.extend(get_objetos_mecanus(cnxn, server, base, where_tables))
@@ -199,7 +190,7 @@ def get_objects(cfg, object_pattern, ndays=None):
 def get_parts_from_object_pattern(object_pattern):
     return tuple(object_pattern.split('.'))
 
-def get_modulos(cnxn, server, base, where):
+def get_sql_code_objects(cnxn, server, base, where):
     SQL = SQL_modulos.replace('{base}', base).replace('{server}', server).replace('{where}', where)
     cursorb = cnxn.cursor()
     cursorb.execute(SQL)
@@ -215,7 +206,7 @@ EXEC [g-track].dbo.List_Mecanus_Objects
         @TipoObjeto	    = NULL,
         @ErrorMessage	= @ErrorMessage OUTPUT
 """
-
+    #print(server + "." + base)
     SQL = SQL_MO.replace('{base}', base).replace('{server}', server)
     cursorc = cnxn.cursor()
     #print(SQL)
