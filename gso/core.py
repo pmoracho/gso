@@ -17,6 +17,7 @@ try:
     from gso.log import Log
     from gso.config import Config
     from gso.exporter import export
+    from gso.exporter import test
     from gso.remover import remove
 
 except ImportError as err:
@@ -69,6 +70,9 @@ def main():
     log.info("Loading config: {}".format(cfgfile))
 
     start = time.time()
+    if args.verbo == "test":
+        test(config, args.objeto, args.ndays)
+
     if args.verbo == "export":
         export(config, args.objeto, args.ndays)
 
