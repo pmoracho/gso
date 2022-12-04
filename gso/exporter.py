@@ -20,15 +20,15 @@ select name
 """
 
 objetos_def = {
-    "P ": {"folder": "sp", "export": export_sp, "name_format": "{owner}.{objname}"},
+    "P": {"folder": "sp", "export": export_sp, "name_format": "{owner}.{objname}"},
     "PV": {"folder": "spv", "export": export_sp, "name_format": "{owner}.{objname}"},
-    "V ": {"folder": "view", "export": export_content, "name_format": "{owner}.{objname}"},
+    "V": {"folder": "view", "export": export_content, "name_format": "{owner}.{objname}"},
     "FN": {"folder": "fn", "export": export_function, "name_format": "{owner}.{objname}"},
     "IF": {"folder": "fn", "export": export_function, "name_format": "{owner}.{objname}"},
     "TR": {"folder": "trg", "export": export_content, "name_format": "{owner}.{objname}"},
-    "R ": {"folder": "rule", "export": export_content, "name_format": "{owner}.{objname}"},
+    "R": {"folder": "rule", "export": export_content, "name_format": "{owner}.{objname}"},
     "TF": {"folder": "fn", "export": export_function, "name_format": "{owner}.{objname}"},
-    "D ": {"folder": "dft", "export": export_content, "name_format": "{owner}.{objname}"},
+    "D": {"folder": "dft", "export": export_content, "name_format": "{owner}.{objname}"},
     "TB": {"folder": "tbl", "export": export_table, "name_format": "{owner}.{objname}"},
     "TT": {"folder": "mobj\\tblt", "export": export_content, "name_format": "{objname}"},
     "RP": {"folder": "mobj\\rpt", "export": export_content, "name_format": "{objname}"},

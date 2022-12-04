@@ -13,6 +13,7 @@ try:
     from gso.__version__  import AUTHOR
     from gso.__version__  import VERSION
     from gso.__version__  import EMAIL
+    from gso.__version__  import TITLE
     from gso.options import init_argparse
     from gso.log import Log
     from gso.config import Config
@@ -28,19 +29,6 @@ except ImportError as err:
 def sum_function_to_test(a, b):
     return a+b
 
-title = """
-
- ██████╗ ███████╗ ██████╗
-██╔════╝ ██╔════╝██╔═══██╗
-██║  ███╗███████╗██║   ██║
-██║   ██║╚════██║██║   ██║
-╚██████╔╝███████║╚██████╔╝
- ╚═════╝ ╚══════╝ ╚═════╝
-
-{0} (v.{1})
-by {2} <{3}>
-
-"""
 
 def main():
 
@@ -50,7 +38,7 @@ def main():
         exit(0)
 
     if not args.quiet:
-        print(title.format(DESCRIPTION, VERSION, AUTHOR, EMAIL))
+        print(TITLE)
 
     log = Log(outputpath=args.logfile,
              loglevel=args.loglevel,

@@ -8,6 +8,7 @@ from gso.__version__  import DESCRIPTION
 from gso.__version__  import URL
 from gso.__version__  import AUTHOR
 from gso.__version__  import VERSION
+from gso.__version__  import TITLE
 
 def _my_gettext(s):
     """Traducir algunas cadenas de argparse."""
@@ -28,17 +29,56 @@ import argparse
 
 def init_argparse():
     """Inicializar parametros del programa."""
+
+    epilog =  """
+
+Patrón de selección:
+    <tipo de objeto>.<conexión>.<database>.<owner>.<nombre del objeto>
+
+Tipos de objeto a seleccionar:
+    P : Stored procedure
+    PV: Stroed procdure (versionado)
+    FN: SQL scalar function
+    IF: SQL inline table-valued function
+    TF: SQL table-valued-function
+    FN: Funcion
+    IF: Escalr function
+    FF: Todas las funciones
+    TR: Trigger
+    D : Default
+    R : Rule
+    OP: Operacón
+    PR: Parametro
+    PA: Procesos Agenda
+    TT: Tabla temporal mecanus
+    TB: Tabla física de SQL Server
+    MO: Modulos
+    ME: Menú de sistema
+    RP: Reporte
+
+Ejemplos:\n
+
+Para exportar todos los objetos a un carpeta físicasegún se define en archivo.cfg:
+   gso export  *.*.*.*.* --config archivo.cfg
+
+Para exportar todos los objetos de una determinada conexión:
+   gso export  *.momdesa1.*.*.* --config archivo.cfg
+
+ Para exportar todos las tablas físicas de cierta base/owner con cierto patron:
+   gso export  TB.momdesa1.contable_db.dbo.MAC --config archivo.cfg
+"""
+
     cmdparser = argparse.ArgumentParser(prog=NAME,
-                                        description="%s\n%s\n" % (DESCRIPTION, AUTHOR),
-                                        epilog="",
+                                        description=TITLE,
+                                        epilog=epilog,
                                         add_help=True,
-                                        formatter_class=make_wide(argparse.HelpFormatter, w=80, h=48)
+                                        formatter_class=make_wide(argparse.RawTextHelpFormatter, w=80, h=48)
     )
 
     opciones = {    "verbo": {
                                 "help": _("Accion a ejecutar")
                     },
-                    "objeto": {
+                    "patrón": {
                                 "help": _("Patron del objeto a exportar")
                     },
                     "--version -v": {
