@@ -18,23 +18,20 @@ try:
     from gso.log import Log
     from gso.config import Config
     from gso.exporter import export
-    from gso.exporter import test
+    from gso.exporter import test_export
     from gso.remover import remove
+    from gso.remover import test_remove
 
 except ImportError as err:
     modulename = err.args[0].partition("'")[-1].rpartition("'")[0]
     print(_("No fue posible importar el modulo: %s") % modulename)
     sys.exit(-1)
 
-def sum_function_to_test(a, b):
-    return a+b
-
-
 def main():
 
     args = init_argparse().parse_args()
 
-    if not args.objeto:
+    if not args.verbo and not args.patron:
         exit(0)
 
     if not args.quiet:
@@ -58,14 +55,18 @@ def main():
     log.info("Loading config: {}".format(cfgfile))
 
     start = time.time()
-    if args.verbo == "test":
-        test(config, args.objeto, args.ndays)
+
+    if args.verbo == "test-export":
+        test_export(config, args.patron, args.ndays)
 
     if args.verbo == "export":
-        export(config, args.objeto, args.ndays)
+        export(config, args.patron, args.ndays)
 
     if args.verbo == "remove":
         remove(config, "*.*.*.*.*")
+
+    if args.verbo == "test-remove":
+        test_remove(config, args.patron)
 
     end = time.time()
     print("Tiempo de proceso: {0} minutos".format( (end - start)/60 ))

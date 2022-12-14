@@ -78,7 +78,7 @@ Para exportar todos los objetos de una determinada conexión:
     opciones = {    "verbo": {
                                 "help": _("Accion a ejecutar")
                     },
-                    "patrón": {
+                    "patron": {
                                 "help": _("Patron del objeto a exportar")
                     },
                     "--version -v": {
