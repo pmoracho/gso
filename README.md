@@ -1,6 +1,6 @@
 # gso
 
-__Get SQL Server objects__
+__Get SQL & Mecanus objects__
 
 Una herramienta de línea de comandos para extraer objetos de servidores de SQL
 SERVER y salvarlos a un archivo. El sentido es el de poder migrar estos a un
@@ -25,6 +25,17 @@ flujo de trabajo basado en `git`.
 * Funciones
 * Triggers
 * Vistas
+
+Adicionalmente:
+
+* Objetos Mecanus
+    - Operaciones
+    - Parametros
+    - Reportes
+    - Modulos
+    - Tablas temporales
+    - Procesos agenda
+    - Menu
 
 
 # Instalación y desarrollo
@@ -138,6 +149,10 @@ Configurar un archivo `.cfg` por ejemplo:
 Ejecutar sobre todos lo servidores, bases, tipo de objetos y objetos:
 
     gso export *.*.*.*.* --config archivo.cfg
+
+Para eliminar (objetos de la base que fueron "dropeados")
+
+    gso remove *.*.*.*.* --config archivo.cfg
 
 [git]: https://git-scm.com/
 [python]: https://www.python.org/
