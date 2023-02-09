@@ -3,7 +3,7 @@ import os
 import glob
 from pathlib import Path
 from gso.tabulate import tabulate
-from gso.objetos import get_objects, objetos_def
+from gso.objetos_logicos import get_logical_objects, objetos_def
 from gso.helper import  slugify
 
 from progressbar import ProgressBar
@@ -58,12 +58,12 @@ def show_remove_objects(a_borrar):
     print(tablestr)
     print("Archivos eliminados: {0}".format(len(a_borrar)))
 
-def test_remove(cfg, object_pattern):
+def test_remove_db(cfg, object_pattern):
 
     a_borrar = get_objetos_a_borar(cfg, object_pattern)
     show_remove_objects(a_borrar)
 
-def remove(cfg, object_pattern):
+def remove_db(cfg, object_pattern):
 
     a_borrar = get_objetos_a_borar(cfg, object_pattern)
     for f in a_borrar:

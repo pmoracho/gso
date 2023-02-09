@@ -35,7 +35,7 @@ def init_argparse():
 Patrón de selección:
     <tipo de objeto>.<conexión>.<database>.<owner>.<nombre del objeto>
 
-Tipos de objeto a seleccionar:
+Tipos de objeto lógico a seleccionar:
     P : Stored procedure
     PV: Stroed procdure (versionado)
     FN: SQL scalar function
@@ -58,14 +58,14 @@ Tipos de objeto a seleccionar:
 
 Ejemplos:\n
 
-Para exportar todos los objetos a un carpeta físicasegún se define en archivo.cfg:
-   gso export  *.*.*.*.* --config archivo.cfg
+Para exportar todos los objetos lógicos a un carpeta físicasegún se define en archivo.cfg:
+   gso export_db  *.*.*.*.* --config archivo.cfg
 
-Para exportar todos los objetos de una determinada conexión:
-   gso export  *.momdesa1.*.*.* --config archivo.cfg
+Para exportar todos los objetos lógicos a un carpeta física según se define en archivo.cfg:
+   gso export_db  *.momdesa1.*.*.* --config archivo.cfg
 
  Para exportar todos las tablas físicas de cierta base/owner con cierto patron:
-   gso export  TB.momdesa1.contable_db.dbo.MAC --config archivo.cfg
+   gso export_db  TB.momdesa1.contable_db.dbo.MAC --config archivo.cfg
 """
 
     cmdparser = argparse.ArgumentParser(prog=NAME,

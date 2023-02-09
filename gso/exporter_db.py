@@ -4,7 +4,7 @@ from pathlib import Path
 from gso.tabulate import tabulate
 from gso.export_helpers import *
 from gso.helper import slugify
-from gso.objetos import *
+from gso.objetos_logicos import *
 from progressbar import ProgressBar
 from progressbar import FormatLabel
 from progressbar import Percentage
@@ -12,10 +12,10 @@ from progressbar import Bar
 from progressbar import RotatingMarker
 from progressbar import ETA
 
-def test_export(cfg, object_pattern, ndays=None):
+def test_export_db(cfg, object_pattern, ndays=None):
 
     print("Creating list of objects (Tables/Code/Mecanus Objects)")
-    objetos = get_objects(cfg, object_pattern, ndays)
+    objetos = get_logical_objects(cfg, object_pattern, ndays)
 
 
     tablestr = tabulate(
@@ -28,10 +28,10 @@ def test_export(cfg, object_pattern, ndays=None):
     print(tablestr)
     print("{0} objetos".format(len(objetos)))
 
-def export(cfg, object_pattern, ndays=None):
+def export_db(cfg, object_pattern, ndays=None):
 
     print("Creating list of objects (Tables/Code/Mecanus Objects)")
-    objetos = get_objects(cfg, object_pattern, ndays)
+    objetos = get_logical_objects(cfg, object_pattern, ndays)
 
     print("Exporting objects to files")
     i = 0

@@ -2,11 +2,20 @@
 
 __Get SQL & Mecanus objects__
 
-Una herramienta de línea de comandos para extraer objetos de servidores de SQL
-SERVER y salvarlos a un archivo. El sentido es el de poder migrar estos a un
+Una herramienta de línea de comandos para:
+
+* Extraer objetos de servidores de SQL SERVER y sal|varlos a un archivo.
+* Copiar archivos físicos de los sistemas **Mecanus**, por ejemplo: reportes crystal
+
+El sentido es el de poder migrar el desarrollo de las aplicaciones **Mecanus** a un
 flujo de trabajo basado en `git`.
 
-### características
+## Importante
+
+La configuración y funcionalidad se basa en la base de datos `[g-track]`, debiera
+haber una por motor y una versión "master" dónde reside la configuración.
+
+## características
 
 * Simple y estándar
 * Uso de `setup.py`
@@ -16,7 +25,7 @@ flujo de trabajo basado en `git`.
 * Log con `logging`
 * `docker`izable
 
-### Objetos exportables
+## Objetos exportables
 
 * Tablas físicas
     - Script de creación con índices
@@ -37,6 +46,9 @@ Adicionalmente:
     - Procesos agenda
     - Menu
 
+* Archivos físicos
+    - Reportes
+    - Scripts
 
 # Instalación y desarrollo
 ## Requerimientos básicos:
@@ -148,11 +160,16 @@ Configurar un archivo `.cfg` por ejemplo:
 
 Ejecutar sobre todos lo servidores, bases, tipo de objetos y objetos:
 
-    gso export *.*.*.*.* --config archivo.cfg
+    gso export_db *.*.*.*.* --config archivo.cfg
 
 Para eliminar (objetos de la base que fueron "dropeados")
 
-    gso remove *.*.*.*.* --config archivo.cfg
+    gso remove_db *.*.*.*.* --config archivo.cfg
+
+Para copiar objetos físcos:
+
+    gso exportfiles *.*.sistemas_correspondencia --config archivo.cfg
+
 
 [git]: https://git-scm.com/
 [python]: https://www.python.org/

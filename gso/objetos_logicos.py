@@ -75,7 +75,7 @@ SQL_Objetos = """
 SET NOCOUNT OFF;
 
 DECLARE @ErrorMessage	VARCHAR(MAX)
-EXEC [g-track].dbo.[List_Objects]
+EXEC [g-track].dbo.[List_Logical_Objects]
         @Database       = '{database}',
         @DaysFromChange = {ndays},
         @Owner          = '{owner_solicitado}',
@@ -87,7 +87,7 @@ SELECT @ErrorMessage AS the_output;
 """
 
 
-def get_objects(cfg, object_pattern, ndays=None):
+def get_logical_objects(cfg, object_pattern, ndays=None):
 
     servers = []
     columns = []
@@ -124,7 +124,7 @@ def get_objects(cfg, object_pattern, ndays=None):
 
         for database in bases:
 
-            SQL = SQL_Objetos.replace('{database}', database).replace('{ndays}', ndays).replace('{owner_solicitado}', owner_solicitado).replace('{objname_solicitado}', objname_solicitado).replace('{objec_type_solicitado}', objec_type_solicitado)
+            SQL = SQL_Objetos.replace('{database}', database).replace('{ndays}', str(ndays)).replace('{owner_solicitado}', owner_solicitado).replace('{objname_solicitado}', objname_solicitado).replace('{objec_type_solicitado}', objec_type_solicitado)
             # print(SQL)
             cursorb = cnxn.cursor()
             cursorb.execute(SQL)
