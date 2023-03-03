@@ -10,7 +10,8 @@ class Config:
                "booleano": False,
                "cadena": '',
                "progress_bar_ticks": 20,
-               "export_path": "."
+               "export_path": ".",
+               "master_server": "",
             }
 
     def __init__(self, file=None, override_section=None):
