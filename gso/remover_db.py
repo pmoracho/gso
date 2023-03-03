@@ -15,7 +15,7 @@ from progressbar import ETA
 
 def get_objetos_a_borar(cfg, object_pattern):
 
-    objetos = get_objects(cfg, object_pattern)
+    objetos = get_logical_objects(cfg, object_pattern)
 
     logicos = set()
     for server, database, owner, objname, tipo, modificado, mobject, text in objetos:

@@ -43,7 +43,7 @@ def export_fisicos(cfg, object_pattern, ndays=None):
 
     for database, tipo_objeto, file, dstfile in objetos:
 
-        widgets[0] = FormatLabel('[W: {0}.{1}.{2}]'.format(database, tipo_objeto, file))
+        widgets[0] = FormatLabel('[W: {0}.{1}]'.format(database, tipo_objeto))
 
         p = Path(os.path.dirname(dstfile))
         try:
