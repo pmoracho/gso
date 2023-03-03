@@ -1,6 +1,6 @@
 """Script principal
 """
-from scrapper.core import main
+from gso.core import main
 
 if __name__ == '__main__':
     main()
