@@ -71,10 +71,10 @@ def main():
         test_remove_db(config, args.patron)
 
     if args.verbo == "test-exportfiles":
-        test_export_fisicos(config, args.patron)
+        test_export_fisicos(config, args.patron, args.ndays)
 
     if args.verbo == "exportfiles":
-        export_fisicos(config, args.patron)
+        export_fisicos(config, args.patron, args.ndays)
 
     end = time.time()
     print("Tiempo de proceso: {0} minutos".format( (end - start)/60 ))
