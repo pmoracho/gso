@@ -76,6 +76,16 @@ def main():
     if args.verbo == "exportfiles":
         export_fisicos(config, args.patron, args.ndays)
 
+    if args.verbo == "all":
+        export_db(config, args.patron, args.ndays)
+        remove_db(config, "*.*.*.*.*")
+        export_fisicos(config, args.patron, args.ndays)
+
+    if args.verbo == "test-all":
+        test_export_db(config, args.patron, args.ndays)
+        test_remove_db(config, "*.*.*.*.*")
+        test_export_fisicos(config, args.patron, args.ndays)
+
     end = time.time()
     print("Tiempo de proceso: {0} minutos".format( (end - start)/60 ))
 

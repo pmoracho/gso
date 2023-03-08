@@ -30,8 +30,12 @@ def get_phisical_objects(cfg, object_pattern, ndays=None):
     columns = []
     objetos = []
 
-    # tipoObjetofisico.servidor.database
-    tipo_objeto_fisico_solicitado, server_solicitado, base_solicitada = tuple(object_pattern.split('.'))
+    t = tuple(object_pattern.split('.'))
+
+    if len(t) == 5:
+        tipo_objeto_fisico_solicitado, server_solicitado, base_solicitada, _, _ = tuple(object_pattern.split('.'))
+    else:
+        tipo_objeto_fisico_solicitado, server_solicitado, base_solicitada = tuple(object_pattern.split('.'))
 
     tipo_objeto_fisico_solicitado = 'NULL' if tipo_objeto_fisico_solicitado == "*" else "'" + tipo_objeto_fisico_solicitado + "'"
     server_solicitado = 'NULL' if server_solicitado == "*" else "'" + server_solicitado + "'"
