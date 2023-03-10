@@ -1,3 +1,6 @@
+import os
+import time
+
 def get_set_header(base):
     return """USE [{base}]
 GO
@@ -35,3 +38,13 @@ def export_table(base, owner, obj, path, file, text):
 def save_object(file, text):
     with open(file, 'w', encoding='utf-8') as f:
         f.writelines(text)
+
+def was_modified_last_ndays(file_path, ndays=15):
+    file_info = os.stat(file_path)
+    current_time = time.time()
+
+    dias = (current_time - file_info.st_mtime) / (24 * 60 * 60)
+    if current_time - file_info.st_mtime <= ndays * 24 * 60 * 60:
+        return True
+    else:
+        return False

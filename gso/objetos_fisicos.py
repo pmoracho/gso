@@ -7,6 +7,7 @@ from pathlib import Path
 from gso.tabulate import tabulate
 from gso.export_helpers import *
 from gso.helper import slugify
+from gso.export_helpers import was_modified_last_ndays
 
 def search_folder(cwd, searchParam, searchResults, recursive=False):
 
@@ -29,8 +30,12 @@ def get_phisical_objects(cfg, object_pattern, ndays=None):
     columns = []
     objetos = []
 
-    # tipoObjetofisico.servidor.database
-    tipo_objeto_fisico_solicitado, server_solicitado, base_solicitada = tuple(object_pattern.split('.'))
+    t = tuple(object_pattern.split('.'))
+
+    if len(t) == 5:
+        tipo_objeto_fisico_solicitado, server_solicitado, base_solicitada, _, _ = tuple(object_pattern.split('.'))
+    else:
+        tipo_objeto_fisico_solicitado, server_solicitado, base_solicitada = tuple(object_pattern.split('.'))
 
     tipo_objeto_fisico_solicitado = 'NULL' if tipo_objeto_fisico_solicitado == "*" else "'" + tipo_objeto_fisico_solicitado + "'"
     server_solicitado = 'NULL' if server_solicitado == "*" else "'" + server_solicitado + "'"
@@ -75,11 +80,10 @@ SELECT @ErrorMessage AS the_output;
             dstpath = os.path.join(cfg.export_path, db_sistemas, tipo_objeto_fisico, dirname).lower()
             dstfile = os.path.join(dstpath, slugify(os.path.basename(file)))
 
-            #print(dirname, dstfile)
-
-            objetos.append(
-                (db_sistemas, tipo_objeto_fisico, os.path.join(path, file), dstfile)
-            )
+            if ndays is None or was_modified_last_ndays(file, int(ndays)):
+                objetos.append(
+                    (db_sistemas, tipo_objeto_fisico, os.path.join(path, file), dstfile)
+                )
 
 
     return objetos

@@ -1,6 +1,6 @@
 """Metadados de la app
 """
-__version__ = (0, 9, 0)
+__version__ = (0, 9, 1)
 NAME = 'gso'
 DESCRIPTION = 'Get SQL Server and Mecanus objects'
 URL = 'https://github.com/pmoracho/gso'
